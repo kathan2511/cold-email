@@ -9,7 +9,8 @@ function App() {
     company: '',
     jobDescription: '',
     senderEmail: '',
-    senderPassword: ''
+    senderPassword: '',
+    overrideEmail: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,7 @@ function App() {
   const [validationErrors, setValidationErrors] = useState({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showCredentialFields, setShowCredentialFields] = useState(false);
+  const [useEmailOverride, setUseEmailOverride] = useState(false);
 
   // Check credentials status on component mount
   React.useEffect(() => {
@@ -49,6 +51,11 @@ function App() {
     if (!formData.company.trim()) errors.company = 'Company is required';
     if (!formData.jobDescription.trim()) errors.jobDescription = 'Job description is required';
     
+    // Validate override email if enabled
+    if (useEmailOverride && !formData.overrideEmail.trim()) {
+      errors.overrideEmail = 'Override email is required when email override is enabled';
+    }
+    
     // Only validate email fields if credentials are not stored AND no override credentials provided
     const needsCredentials = !credentialsStatus?.has_credentials;
     const providingOverride = showCredentialFields && (formData.senderEmail.trim() || formData.senderPassword.trim());
@@ -77,7 +84,13 @@ function App() {
     setResult(null);
 
     try {
-      const response = await axios.post('http://localhost:5001/send-email', formData);
+      // Prepare form data including override email if enabled
+      const submitData = {
+        ...formData,
+        overrideEmail: useEmailOverride ? formData.overrideEmail : ''
+      };
+      
+      const response = await axios.post('http://localhost:5001/send-email', submitData);
       setResult(response.data);
       setHasSubmitted(false); // Reset validation state on success
     } catch (err) {
@@ -94,12 +107,14 @@ function App() {
       company: '',
       jobDescription: '',
       senderEmail: '',
-      senderPassword: ''
+      senderPassword: '',
+      overrideEmail: ''
     });
     setResult(null);
     setError(null);
     setValidationErrors({});
     setHasSubmitted(false);
+    setUseEmailOverride(false);
   };
 
   return (
@@ -231,6 +246,43 @@ function App() {
             )}
           </div>
 
+          {/* Email Override Section */}
+          <div className="email-override-section">
+            <div className="override-toggle">
+              <button 
+                type="button" 
+                className={`toggle-btn ${useEmailOverride ? 'active' : ''}`}
+                onClick={() => setUseEmailOverride(!useEmailOverride)}
+              >
+                {useEmailOverride ? '📧 Email Override: ON' : '🔄 Use Email Override'}
+              </button>
+              <span className="override-help">
+                {useEmailOverride ? 'Specific email will be used instead of generating multiple emails' : 'Click to specify exact recipient email address'}
+              </span>
+            </div>
+            
+            {useEmailOverride && (
+              <div className="form-group override-field">
+                <label htmlFor="overrideEmail">Recipient Email *</label>
+                <input
+                  type="email"
+                  id="overrideEmail"
+                  name="overrideEmail"
+                  value={formData.overrideEmail}
+                  onChange={handleChange}
+                  className={hasSubmitted && validationErrors.overrideEmail ? 'error' : ''}
+                  placeholder="recipient@company.com"
+                />
+                {hasSubmitted && validationErrors.overrideEmail && (
+                  <span className="error-text">{validationErrors.overrideEmail}</span>
+                )}
+                <small className="help-text">
+                  This email will be used instead of generating multiple email patterns
+                </small>
+              </div>
+            )}
+          </div>
+
           {(!credentialsStatus?.has_credentials || showCredentialFields) && (
             <>
               <div className="form-group">
@@ -293,6 +345,12 @@ function App() {
             <p>{result.message}</p>
             <div className="result-details">
               <p><strong>Job Type Detected:</strong> {result.job_type}</p>
+              {result.override_used && (
+                <p><strong>Email Override:</strong> ✅ Used specific email address</p>
+              )}
+              {!result.override_used && (
+                <p><strong>Email Generation:</strong> 🔄 Generated multiple email patterns</p>
+              )}
               <p><strong>Emails Sent To:</strong></p>
               <ul>
                 {result.sent_emails.map((email, index) => (
@@ -324,6 +382,13 @@ function App() {
               </div>
             </div>
             <div className="info-item">
+              <div className="info-icon">📧</div>
+              <div className="info-content">
+                <h4>Email Override</h4>
+                <p>Optionally specify exact email or auto-generate patterns</p>
+              </div>
+            </div>
+            <div className="info-item">
               <div className="info-icon">🤖</div>
               <div className="info-content">
                 <h4>AI Detection</h4>
@@ -331,17 +396,10 @@ function App() {
               </div>
             </div>
             <div className="info-item">
-              <div className="info-icon">📧</div>
+              <div className="info-icon">📄</div>
               <div className="info-content">
                 <h4>Smart Templates</h4>
                 <p>Selects appropriate email template and resume</p>
-              </div>
-            </div>
-            <div className="info-item">
-              <div className="info-icon">🎯</div>
-              <div className="info-content">
-                <h4>Multi-Send</h4>
-                <p>Generates 8 email patterns and sends to all</p>
               </div>
             </div>
           </div>

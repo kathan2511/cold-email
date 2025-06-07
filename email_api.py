@@ -137,6 +137,7 @@ def send_email():
         job_description = data.get('jobDescription', '').strip()
         sender_email = data.get('senderEmail', '').strip()
         sender_password = data.get('senderPassword', '').strip()
+        override_email = data.get('overrideEmail', '').strip()  # New override email field
         
         # Try to get credentials from secure storage if not provided
         if not sender_email or not sender_password:
@@ -171,9 +172,15 @@ def send_email():
         if not os.path.exists(resume_path):
             return jsonify({'error': f'Resume file not found: {resume_path}'}), 400
         
-        # Generate company domain and email addresses
-        company_domain = company.lower().replace(" ", "") + ".com"
-        possible_emails = generate_email_addresses(first_name, last_name, company_domain)
+        # Determine recipient emails - use override if provided, otherwise generate patterns
+        if override_email:
+            possible_emails = [override_email]
+            print(f"📧 Using override email: {override_email}")
+        else:
+            # Generate company domain and email addresses
+            company_domain = company.lower().replace(" ", "") + ".com"
+            possible_emails = generate_email_addresses(first_name, last_name, company_domain)
+            print(f"🔄 Generated {len(possible_emails)} email patterns for {company_domain}")
         
         # Connect to SMTP server
         try:
@@ -211,10 +218,11 @@ def send_email():
         
         return jsonify({
             'success': True,
-            'message': f'Emails sent successfully to {len(sent_emails)} addresses',
+            'message': f'Emails sent successfully to {len(sent_emails)} address{"es" if len(sent_emails) != 1 else ""}',
             'sent_emails': sent_emails,
             'failed_emails': failed_emails,
-            'job_type': job_type
+            'job_type': job_type,
+            'override_used': bool(override_email)
         })
         
     except Exception as e:

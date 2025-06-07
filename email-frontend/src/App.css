@@ -403,5 +403,75 @@ h1 {
 }
 
 .override-btn.secondary:hover {
+  background-color: #95a5a6;
+}
+
+/* Email Override Section */
+.email-override-section {
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.override-toggle {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.toggle-btn {
+  padding: 10px 20px;
+  border: 2px solid #6c757d;
+  background: white;
+  color: #6c757d;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.toggle-btn:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+}
+
+.toggle-btn.active {
+  background-color: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.toggle-btn.active:hover {
   background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.override-help {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.override-field {
+  margin-top: 15px;
+  margin-bottom: 0;
+}
+
+.override-field label {
+  color: #495057;
+  font-weight: 600;
+}
+
+.override-field input {
+  border-color: #ced4da;
+}
+
+.override-field input:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
 } 
